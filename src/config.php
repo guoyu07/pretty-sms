@@ -10,8 +10,8 @@ return array(
     ),
 
     'alias' => array(
-        'alidayu' => 'Godruoyi\PrettySms\proxys\alidayu\Alidayu',
-        'tencentyun' => 'Godruoyi\PrettySms\proxys\tencentyun\Tencentyun',
+        'alidayu' => 'Godruoyi\PrettySms\Gateways\Alidayu',
+        'tencentyun' => 'Godruoyi\PrettySms\Gateways\Tencentyun',
     ),
 
     'active' => array(
@@ -51,7 +51,7 @@ return array(
      * -----------------------------------------------------------------
      */
 
-    'globalMiddleware' => array(
+    'middleware' => array(
     ),
 
     /**
@@ -60,10 +60,10 @@ return array(
      * -----------------------------------------------------------------
      */
 
-    'middleware' => array(
+    'middlewareAlias' => array(
         'alidayu' => array(
             'Godruoyi\PrettySms\Middleware\AlidayuMiddleware',
         ),
-        'tencentyun' => 'Godruoyi\PrettySms\Middleware\TencentyunMiddleware',
+        // 'tencentyun' => 'Godruoyi\PrettySms\Middleware\TencentyunMiddleware',
     ),
 );

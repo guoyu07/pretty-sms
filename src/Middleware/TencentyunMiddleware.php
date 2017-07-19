@@ -3,25 +3,25 @@
 namespace Godruoyi\PrettySms\Middleware;
 
 use Closure;
-use Godruoyi\PrettySms\Kernel;
+use Godruoyi\PrettySms\Client;
 use Godruoyi\PrettySms\Support\Collection;
 use Godruoyi\PrettySms\Support\Response;
 
 class TencentyunMiddleware
 {
     /**
-     * Kernel Instance
+     * Client Instance
      * 
-     * @var Kernel
+     * @var Client
      */
     protected $app;
 
     /**
-     * Register Kernel
+     * Register Client
      * 
-     * @param Kernel $app
+     * @param Client $app
      */
-    public function __construct(Kernel $app)
+    public function __construct(Client $app)
     {
         $this->app = $app;
     }

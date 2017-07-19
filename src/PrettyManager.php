@@ -15,7 +15,7 @@ class PrettyManager
     /**
      * Container Instance
      *
-     * @var Kernel
+     * @var Client
      */
     public $app;
 
@@ -29,7 +29,7 @@ class PrettyManager
     /**
      * Mark Instance
      *
-     * @param Kernel $app
+     * @param Client $app
      */
     public function __construct(Client $app)
     {
@@ -48,11 +48,10 @@ class PrettyManager
         $this->app['request'] = $requestParams;
         $name = $this->getProxyNameForRequest();
 
-        $middlewares = Collection::make($this->app->middleware())->get($name, array());
+        $middlewares = Collection::make($this->app->getAliasMiddleware())->get($name, array());
 
         //通过全局中间件后，在指定其通过局部中间件
-        $pipeLine = new Pipeline($this->app);
-        $response = $pipeLine->send($this->app['request'])
+        $response = (new Pipeline($this->app))->send($this->app['request'])
                 ->through($middlewares)
                 ->then($this->ultimate($name));
 

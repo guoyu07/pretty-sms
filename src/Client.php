@@ -79,12 +79,10 @@ class Client extends Container
     {
         $name = $this->nullDefinition($name);
 
-        if (!empty($this->aliasMiddleware[$name])) {
-            foreach ((array) $middlewares as $middleware) {
-                $middleware = $this->normalize($middleware);
-                if (array_search($middleware, $this->aliasMiddleware[$name]) === false) {
-                    array_unshift($this->aliasMiddleware[$name], $middleware);
-                }
+        foreach ((array) $middlewares as $middleware) {
+            $middleware = $this->normalize($middleware);
+            if (array_search($middleware, $this->aliasMiddleware[$name]) === false) {
+                array_unshift($this->aliasMiddleware[$name], $middleware);
             }
         }
 
@@ -116,12 +114,12 @@ class Client extends Container
     {
         $name = $this->nullDefinition($alias);
 
-        if (!empty($this->aliasMiddleware[$name])) {
-            foreach ((array) $middlewares as $middleware) {
-                $middleware = $this->normalize($middleware);
-                if (array_search($middleware, $this->aliasMiddleware[$name]) === false) {
-                    $this->aliasMiddleware[$name][] = $middleware;
-                }
+        foreach ((array) $middlewares as $middleware) {
+            $middleware = $this->normalize($middleware);
+            if (empty($this->aliasMiddleware[$name]) || 
+                array_search($middleware, $this->aliasMiddleware[$name]) === false) {
+                
+                $this->aliasMiddleware[$name][] = $middleware;
             }
         }
 
@@ -136,14 +134,14 @@ class Client extends Container
     public function send(array $requestParams = array())
     {
         $this['request'] = Collection::make($requestParams);
-        try {
             $response = $this->throughPipeline();
-        } catch (Exception $e) {
-            $response = $this->readerException($e);
+        // try {
+        // } catch (Exception $e) {
+        //     $response = $this->readerException($e);
 
-        } catch (Throwable $t) {
-            $response = $this->readerException($t);
-        }
+        // } catch (Throwable $t) {
+        //     $response = $this->readerException($t);
+        // }
 
         return $response;
     }
@@ -195,15 +193,24 @@ class Client extends Container
     protected function parseConfig($config)
     {
         $config = Collection::make($this['loader']->load($config));
-        foreach ($config->get('globalMiddleware', []) as $middleware) {
+        foreach ($config->get('middleware', []) as $middleware) {
             $this->pushMiddleware($middleware);
         }
 
-        $this->pushMiddleware($config->get('middleware', array()));
+        foreach ($config->get('middlewareAlias', []) as $alias => $middleware) {
+            $alias = $this->nullDefinition($alias);
+            $this->pushAliasMiddleware($alias, $middleware);
+        }
 
         return $config;
     }
 
+    /**
+     * Reader Exception to response
+     * 
+     * @param  mixed $e
+     * @return Response
+     */
     protected function readerException($e)
     {
         return Response::error($e->getMessage());
@@ -232,8 +239,8 @@ class Client extends Container
             return $app->make(Support\Loader::class);
         });
 
-        $this->singleton('proxy_service', function($app){
-            return $app->make(PrettyManager:class);
+        $this->singleton('proxy_service', function($app) {
+            return $app->make(PrettyManager::class);
         });
     }
 
@@ -244,28 +251,36 @@ class Client extends Container
      */
     protected function throughPipeline()
     {
-        // 通过全局限制中间件，最后在通过proxy_service来执行handle
-        $pipeLine = new Pipeline($this);
-        return $pipeLine->send($this->app['request'])
-                ->through($this->globalMiddleware)
+        return (new Pipeline($this))->send($this->app['request'])
+                ->through($this->middleware)
                 ->then($this->destination());
     }
 
     /**
-     * Last Middleware
+     * Get Last Clouse
      *
      * @return mixed
      */
     protected function destination()
     {
-        // PHP5.3不支持闭包里调用$this， 只能采用use写入闭包，但这种方式只能访问修饰符为
-        // public的属性或方法
-        $self = $this;
-        return function ($requestParams) use ($self) {
-            // $self->proviteMethod(); //Error
-            // $self->protectedMethod(); //Error
-            return $self['proxy_service']->handle($requestParams);
+        return function ($requestParams) {
+            return $this['proxy_service']->handle($requestParams);
         };
+    }
+
+    /**
+     * Check gieved name has empty
+     * 
+     * @param  string $name
+     * @return string
+     */
+    public function nullDefinition($name)
+    {
+        if (empty($name)) {
+            throw new Exceptions\InvalidArgumentException('Invalid Argument Null DEfined');
+        }
+
+        return trim($name);
     }
 
     /**
@@ -285,8 +300,6 @@ class Client extends Container
      */
     public function getAliasMiddleware()
     {
-        return $this->aliasMiddlewares;
+        return $this->aliasMiddleware;
     }
-
-
 }

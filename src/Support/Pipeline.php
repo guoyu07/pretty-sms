@@ -4,14 +4,14 @@ namespace Godruoyi\PrettySms\Support;
 
 use Closure;
 use RuntimeException;
-use Godruoyi\PrettySms\Kernel;
+use Godruoyi\PrettySms\Client;
 
 class Pipeline
 {
     /**
      * The container implementation.
      *
-     * @var Kernel
+     * @var Client
      */
     protected $container;
 
@@ -39,10 +39,10 @@ class Pipeline
     /**
      * Create a new class instance.
      *
-     * @param  Kernel
+     * @param  Client
      * @return void
      */
-    public function __construct(Kernel $container = null)
+    public function __construct(Client $container = null)
     {
         $this->container = $container;
     }
